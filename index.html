@@ -102,3 +102,176 @@ drawBoard();
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Marble Ludo – Outer & Inner Loop</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f2f2f2;
+    }
+    canvas {
+      background: white;
+      border: 2px solid black;
+      margin-top: 15px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Marble Ludo – Movement Test</h2>
+<button onclick="moveToken()">Move 1 Step</button>
+
+<canvas id="board" width="400" height="400"></canvas>
+
+<script>
+/* =========================
+   CONFIG
+========================= */
+const GRID = 5;
+const CELL = 80;
+
+/* =========================
+   BOARD LAYOUT
+   0 = normal
+   1 = safe
+   2 = finish
+========================= */
+const board = [
+  [0,0,1,0,0],
+  [0,0,0,0,0],
+  [1,0,2,0,1],
+  [0,0,0,0,0],
+  [0,0,1,0,0]
+];
+
+/* =========================
+   OUTER LOOP (ANTICLOCKWISE)
+========================= */
+const outerPath = [
+  {x:0,y:0},{x:1,y:0},{x:2,y:0},{x:3,y:0},{x:4,y:0},
+  {x:4,y:1},{x:4,y:2},{x:4,y:3},{x:4,y:4},
+  {x:3,y:4},{x:2,y:4},{x:1,y:4},{x:0,y:4},
+  {x:0,y:3},{x:0,y:2},{x:0,y:1}
+];
+
+/* =========================
+   INNER LOOP (CLOCKWISE)
+========================= */
+const innerPath = [
+  {x:2,y:3},
+  {x:3,y:2},
+  {x:2,y:1},
+  {x:1,y:2}
+];
+
+/* =========================
+   SPECIAL POSITIONS
+========================= */
+const START = {x:2,y:4};      // P1
+const INNER_ENTRY = {x:1,y:4};
+const FINISH = {x:2,y:2};
+
+/* =========================
+   TOKEN STATE
+========================= */
+let mode = "outer";   // outer | inner | finish
+let outerIndex = outerPath.findIndex(
+  p => p.x === START.x && p.y === START.y
+);
+let innerIndex = 0;
+
+/* =========================
+   CANVAS
+========================= */
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
+
+/* =========================
+   DRAW BOARD
+========================= */
+function drawBoard() {
+  ctx.clearRect(0,0,400,400);
+
+  for (let y=0;y<GRID;y++) {
+    for (let x=0;x<GRID;x++) {
+      if (board[y][x] === 1) ctx.fillStyle = "#f4a261";
+      else if (board[y][x] === 2) ctx.fillStyle = "#90dbf4";
+      else ctx.fillStyle = "#ffffff";
+
+      ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
+      ctx.strokeRect(x*CELL, y*CELL, CELL, CELL);
+
+      if (board[y][x] === 2) {
+        ctx.fillStyle = "black";
+        ctx.fillText("FINISH", x*CELL+18, y*CELL+45);
+      }
+    }
+  }
+
+  drawToken();
+}
+
+/* =========================
+   DRAW TOKEN
+========================= */
+function drawToken() {
+  let pos;
+  if (mode === "outer") pos = outerPath[outerIndex];
+  else if (mode === "inner") pos = innerPath[innerIndex];
+  else pos = FINISH;
+
+  ctx.beginPath();
+  ctx.fillStyle = "blue";
+  ctx.arc(
+    pos.x*CELL + CELL/2,
+    pos.y*CELL + CELL/2,
+    14,
+    0,
+    Math.PI*2
+  );
+  ctx.fill();
+}
+
+/* =========================
+   MOVE TOKEN
+========================= */
+function moveToken() {
+
+  if (mode === "outer") {
+    outerIndex = (outerIndex + 1) % outerPath.length;
+
+    const pos = outerPath[outerIndex];
+
+    // Check inner entry
+    if (pos.x === INNER_ENTRY.x && pos.y === INNER_ENTRY.y) {
+      mode = "inner";
+      innerIndex = 0;
+    }
+  }
+
+  else if (mode === "inner") {
+    innerIndex++;
+
+    // Exact finish entry rule
+    if (innerIndex === innerPath.length) {
+      mode = "finish";
+    }
+  }
+
+  drawBoard();
+}
+
+drawBoard();
+</script>
+
+</body>
+</html>
