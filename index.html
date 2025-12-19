@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Marble Ludo</title>
+  <title>Marble Ludo – Layout</title>
 
   <style>
     body {
@@ -11,284 +11,94 @@
       text-align: center;
     }
 
-    h2 {
-      margin-top: 10px;
-    }
-
     canvas {
       background: white;
       border: 2px solid black;
-      margin-top: 10px;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-
-    #info {
-      margin-top: 10px;
-      font-weight: bold;
+      margin-top: 20px;
     }
   </style>
 </head>
-
 <body>
 
-<h2>Marble Ludo (Prototype)</h2>
+<h2>Marble Ludo – Board Layout</h2>
 
-<button id="drawBtn">Draw Marbles</button>
-<div id="info">Player 1 turn</div>
-
-<canvas id="board" width="520" height="520"></canvas>
+<canvas id="board" width="400" height="400"></canvas>
 
 <script>
 /* =========================
-   GAME STATE
+   BOARD CONFIG
 ========================= */
 
-const players = [
-  {
-    name: "P1",
-    color: "red",
-    tokens: [
-      { pos: 0, loop: "outer", laps: 0, finished: false },
-      { pos: 0, loop: "outer", laps: 0, finished: false },
-      { pos: 0, loop: "outer", laps: 0, finished: false },
-      { pos: 0, loop: "outer", laps: 0, finished: false }
-    ]
-  },
-  {
-    name: "P2",
-    color: "blue",
-    tokens: [
-      { pos: 0, loop: "outer", laps: 0, finished: false },
-      { pos: 0, loop: "outer", laps: 0, finished: false },
-      { pos: 0, loop: "outer", laps: 0, finished: false },
-      { pos: 0, loop: "outer", laps: 0, finished: false }
-    ]
-  }
-];
-
-let currentPlayer = 0;
-let drawsUsed = 0;
-const maxDraws = 3;
-
-let pendingMove = 0;
-let captureBonusUsed = false;
-let finishBonusUsed = false;
-
-/* =========================
-   BOARD PATHS
-========================= */
-
-// Outer loop (anticlockwise – simplified square path)
-const path = [];
-const size = 8;
-const cell = 60;
-
-for (let i = 0; i < size; i++) path.push({ x: 60 + i*cell, y: 60, safe: i % 2 === 0 });
-for (let i = 1; i < size; i++) path.push({ x: 60 + (size-1)*cell, y: 60 + i*cell, safe: i % 2 === 0 });
-for (let i = size-2; i >= 0; i--) path.push({ x: 60 + i*cell, y: 60 + (size-1)*cell, safe: i % 2 === 0 });
-for (let i = size-2; i > 0; i--) path.push({ x: 60, y: 60 + i*cell, safe: i % 2 === 0 });
-
-const INNER_ENTRY_INDEX = Math.floor(path.length / 2);
-
-// Inner loop (clockwise)
-const innerPath = [
-  { x: 240, y: 160 },
-  { x: 300, y: 240 },
-  { x: 240, y: 320 },
-  { x: 180, y: 240 }
-];
-
-const FINISH_INDEX = innerPath.length;
-
-/* =========================
-   CANVAS SETUP
-========================= */
+const GRID_SIZE = 5;
+const CELL_SIZE = 80;
 
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
+
+/* =========================
+   BOARD DATA (LAYOUT ONLY)
+========================= */
+/*
+0 = normal square
+1 = safe zone
+2 = finish
+*/
+
+const board = [
+  [0, 0, 1, 0, 0],
+  [0, 0, 0, 0, 0],
+  [1, 0, 2, 0, 1],
+  [0, 0, 0, 0, 0],
+  [0, 0, 1, 0, 0]
+];
 
 /* =========================
    DRAW BOARD
 ========================= */
 
 function drawBoard() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let y = 0; y < GRID_SIZE; y++) {
+    for (let x = 0; x < GRID_SIZE; x++) {
 
-  // Outer path
-  path.forEach(p => {
-    ctx.fillStyle = p.safe ? "#f4a261" : "#ddd";
-    ctx.fillRect(p.x, p.y, 50, 50);
-    ctx.strokeRect(p.x, p.y, 50, 50);
-  });
+      // Choose color
+      if (board[y][x] === 1) {
+        ctx.fillStyle = "#f4a261"; // safe
+      } else if (board[y][x] === 2) {
+        ctx.fillStyle = "#90dbf4"; // finish
+      } else {
+        ctx.fillStyle = "#ffffff"; // normal
+      }
 
-  // Inner path
-  innerPath.forEach(p => {
-    ctx.fillStyle = "#ccc";
-    ctx.fillRect(p.x, p.y, 50, 50);
-    ctx.strokeRect(p.x, p.y, 50, 50);
-  });
+      ctx.fillRect(
+        x * CELL_SIZE,
+        y * CELL_SIZE,
+        CELL_SIZE,
+        CELL_SIZE
+      );
 
-  // Finish
-  ctx.fillStyle = "#90dbf4";
-  ctx.fillRect(235, 235, 50, 50);
-  ctx.strokeRect(235, 235, 50, 50);
-  ctx.fillStyle = "black";
-  ctx.fillText("FINISH", 242, 265);
+      ctx.strokeRect(
+        x * CELL_SIZE,
+        y * CELL_SIZE,
+        CELL_SIZE,
+        CELL_SIZE
+      );
 
-  // Tokens
-  players.forEach(player => {
-    player.tokens.forEach(token => {
-      if (token.finished) return;
-
-      const cellPos =
-        token.loop === "outer"
-          ? path[token.pos]
-          : innerPath[token.pos];
-
-      ctx.beginPath();
-      ctx.fillStyle = player.color;
-      ctx.arc(cellPos.x + 25, cellPos.y + 25, 10, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  });
+      // Finish text
+      if (board[y][x] === 2) {
+        ctx.fillStyle = "black";
+        ctx.font = "14px Arial";
+        ctx.fillText(
+          "FINISH",
+          x * CELL_SIZE + 15,
+          y * CELL_SIZE + 45
+        );
+      }
+    }
+  }
 }
 
 drawBoard();
-
-/* =========================
-   MARBLE DRAW
-========================= */
-
-document.getElementById("drawBtn").onclick = () => {
-  if (pendingMove > 0 || drawsUsed >= maxDraws) return;
-
-  drawsUsed++;
-
-  let marbles = [];
-  for (let i = 0; i < 4; i++) {
-    marbles.push(Math.random() < 0.5 ? "W" : "B");
-  }
-
-  const whites = marbles.filter(m => m === "W").length;
-
-  if (whites === 0) pendingMove = 8;
-  else if (whites === 4) pendingMove = 4;
-  else if (whites === 3 || whites === 1) pendingMove = 1;
-  else pendingMove = 2;
-
-  info.innerText =
-    `${players[currentPlayer].name} drew ${marbles.join("")}. Click a token to move ${pendingMove}`;
-};
-
-/* =========================
-   TOKEN CLICK
-========================= */
-
-canvas.addEventListener("click", e => {
-  if (pendingMove === 0) return;
-
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-
-  const player = players[currentPlayer];
-
-  player.tokens.forEach(token => {
-    if (token.finished) return;
-
-    const cellPos =
-      token.loop === "outer"
-        ? path[token.pos]
-        : innerPath[token.pos];
-
-    const dx = x - (cellPos.x + 25);
-    const dy = y - (cellPos.y + 25);
-
-    if (Math.sqrt(dx*dx + dy*dy) < 12) {
-      moveToken(token);
-    }
-  });
-});
-
-/* =========================
-   MOVE LOGIC
-========================= */
-
-function moveToken(token) {
-  let steps = pendingMove;
-  pendingMove = 0;
-
-  if (token.loop === "outer") {
-    let newPos = token.pos + steps;
-
-    if (newPos >= path.length) {
-      token.laps++;
-      newPos = newPos % path.length;
-    }
-
-    if (token.laps >= 1 && newPos === INNER_ENTRY_INDEX) {
-      token.loop = "inner";
-      token.pos = 0;
-    } else {
-      token.pos = newPos;
-    }
-  } else {
-    if (token.pos + steps === FINISH_INDEX) {
-      token.finished = true;
-      finishBonusUsed = true;
-    } else if (token.pos + steps < FINISH_INDEX) {
-      token.pos += steps;
-    }
-  }
-
-  checkCapture(token);
-  drawBoard();
-
-  if (drawsUsed >= maxDraws) nextTurn();
-}
-
-/* =========================
-   CAPTURE LOGIC
-========================= */
-
-function checkCapture(activeToken) {
-  if (activeToken.loop !== "outer") return;
-  if (path[activeToken.pos].safe) return;
-  if (captureBonusUsed) return;
-
-  players.forEach(player => {
-    if (player === players[currentPlayer]) return;
-
-    player.tokens.forEach(t => {
-      if (!t.finished && t.loop === "outer" && t.pos === activeToken.pos) {
-        t.pos = 0;
-        captureBonusUsed = true;
-      }
-    });
-  });
-}
-
-/* =========================
-   TURN CHANGE
-========================= */
-
-function nextTurn() {
-  drawsUsed = 0;
-  pendingMove = 0;
-  captureBonusUsed = false;
-  finishBonusUsed = false;
-
-  currentPlayer = (currentPlayer + 1) % players.length;
-  info.innerText = `${players[currentPlayer].name} turn`;
-}
 </script>
 
 </body>
 </html>
-
