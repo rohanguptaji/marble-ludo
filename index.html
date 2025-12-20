@@ -9,11 +9,7 @@ canvas{background:white;border:2px solid black;margin-top:15px}
 button{margin-top:10px;padding:8px 16px;font-size:16px}
 #info{margin-top:6px;font-weight:bold}
 #marbles{margin-top:10px}
-.marble{
- width:24px;height:24px;border-radius:50%;
- display:inline-block;margin:4px;
- border:1px solid #333;
-}
+.marble{width:24px;height:24px;border-radius:50%;display:inline-block;margin:4px;border:1px solid #333}
 .white{background:#f5f5f5}
 .black{background:#222}
 </style>
@@ -30,6 +26,7 @@ button{margin-top:10px;padding:8px 16px;font-size:16px}
 <script>
 /* ===== CONFIG ===== */
 const GRID=5, CELL=80, MAX_EXTRA_DRAWS=2;
+const STEP_DELAY = 180;
 
 /* ===== BOARD ===== */
 const board=[
@@ -70,6 +67,7 @@ players.forEach(p=>{
 });
 
 let currentPlayer=0, selectedToken=0, extraDrawsUsed=0, gameOver=false;
+let animating=false;
 
 const canvas=document.getElementById("board");
 const ctx=canvas.getContext("2d");
@@ -79,8 +77,46 @@ const marblesDiv=document.getElementById("marbles");
 /* ===== DRAW BOARD ===== */
 function drawBoard(){
  ctx.clearRect(0,0,400,400);
+// arrows (guides)
+ctx.fillStyle = "#aaa";
+ctx.fillText("⟲", 190, 30);   // outer loop (anticlockwise)
+ctx.fillText("⟳", 190, 215);  // inner loop (clockwise)
+ 
+ctx.font = "24px Arial";
+ctx.fillStyle = "#888";
+ctx.fillText("⟲ OUTER", 140, 28);
+ctx.fillText("⟳ INNER", 140, 235);
+// ===== DRAW DIRECTION ARROWS =====
+ctx.strokeStyle = "#888";
+ctx.fillStyle = "#888";
+ctx.lineWidth = 2;
 
- // board
+// Outer loop arrows (anticlockwise)
+drawArrow(200, 10, 160, 10);   // top
+drawArrow(390, 200, 390, 160); // right
+drawArrow(200, 390, 240, 390); // bottom
+drawArrow(10, 200, 10, 240);   // left
+
+// Inner loop arrows (clockwise)
+drawArrow(200, 250, 240, 210);
+drawArrow(250, 200, 200, 160);
+drawArrow(200, 150, 160, 200);
+drawArrow(150, 200, 200, 240);
+function drawArrow(x1,y1,x2,y2){
+ const head=8;
+ const angle=Math.atan2(y2-y1,x2-x1);
+ ctx.beginPath();
+ ctx.moveTo(x1,y1);
+ ctx.lineTo(x2,y2);
+ ctx.stroke();
+ ctx.beginPath();
+ ctx.moveTo(x2,y2);
+ ctx.lineTo(x2-head*Math.cos(angle-Math.PI/6), y2-head*Math.sin(angle-Math.PI/6));
+ ctx.lineTo(x2-head*Math.cos(angle+Math.PI/6), y2-head*Math.sin(angle+Math.PI/6));
+ ctx.lineTo(x2,y2);
+ ctx.fill();
+}
+
  for(let y=0;y<GRID;y++)for(let x=0;x<GRID;x++){
   ctx.fillStyle=board[y][x]==1?"#f4a261":board[y][x]==2?"#90dbf4":"#fff";
   ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
@@ -88,12 +124,10 @@ function drawBoard(){
   if(board[y][x]==2)ctx.fillText("FINISH",x*CELL+18,y*CELL+45);
  }
 
- // arrows (guides)
  ctx.fillStyle="#aaa";
- ctx.fillText("⟲", 190, 30);   // outer
- ctx.fillText("⟳", 190, 215);  // inner
+ ctx.fillText("⟲",190,30);
+ ctx.fillText("⟳",190,215);
 
- // tokens
  players.forEach((p,pi)=>{
   p.tokens.forEach((t,i)=>{
    if(t.finished)return;
@@ -102,9 +136,9 @@ function drawBoard(){
    ctx.beginPath();
    ctx.fillStyle=(pi===currentPlayer&&i===selectedToken)?"red":p.color;
    ctx.arc(
-     pos.x*CELL+CELL/2 + (i%2)*6,
-     pos.y*CELL+CELL/2 + Math.floor(i/2)*6,
-     11,0,Math.PI*2
+    pos.x*CELL+CELL/2+(i%2)*6,
+    pos.y*CELL+CELL/2+Math.floor(i/2)*6,
+    11,0,Math.PI*2
    );
    ctx.fill();
   });
@@ -116,10 +150,9 @@ function drawMarbles(){
  marblesDiv.innerHTML="";
  let m=[],w;
  for(let i=0;i<4;i++){
-  let val=Math.random()<0.5?"W":"B";
-  m.push(val);
+  let v=Math.random()<0.5?"W":"B"; m.push(v);
   let d=document.createElement("div");
-  d.className="marble "+(val==="W"?"white":"black");
+  d.className="marble "+(v==="W"?"white":"black");
   marblesDiv.appendChild(d);
  }
  w=m.filter(x=>x==="W").length;
@@ -147,55 +180,35 @@ function moveOneStep(t){
  }
 }
 
-function checkCapture(){
- let atk=players[currentPlayer];
- let pos=outerPath[atk.tokens[selectedToken].outerIndex];
- if(board[pos.y][pos.x]===1)return false;
- for(let pi=0;pi<players.length;pi++){
-  if(pi===currentPlayer)continue;
-  for(let t of players[pi].tokens){
-   if(!t.finished && t.mode==="outer"){
-    let p=outerPath[t.outerIndex];
-    if(p.x===pos.x&&p.y===pos.y){
-     t.outerIndex=outerPath.findIndex(q=>q.x===players[pi].start.x&&q.y===players[pi].start.y);
-     t.mode="outer"; t.innerIndex=0;
-     return true;
-    }
-   }
-  }
- }
- return false;
-}
-
-function checkWin(){
- if(players[currentPlayer].tokens.every(t=>t.finished)){
-  info.innerText=`🎉 ${players[currentPlayer].name} WINS!`;
-  gameOver=true;
- }
+/* ===== ANIMATED MOVE ===== */
+function animateMove(steps,callback){
+ let t=players[currentPlayer].tokens[selectedToken];
+ if(steps<=0||t.finished){callback();return;}
+ animating=true;
+ moveOneStep(t);
+ drawBoard();
+ setTimeout(()=>animateMove(steps-1,callback),STEP_DELAY);
 }
 
 /* ===== TURN ===== */
 function playTurn(){
- if(gameOver)return;
- let r=drawMarbles(), t=players[currentPlayer].tokens[selectedToken], finished=false;
- for(let i=0;i<r.steps;i++){
-  if(t.finished)break;
-  if(moveOneStep(t)==="finish"){finished=true;break;}
- }
- let captured=checkCapture();
- drawBoard(); checkWin();
- if(gameOver)return;
- if((r.extra||captured||finished)&&extraDrawsUsed<MAX_EXTRA_DRAWS){
-  extraDrawsUsed++;
- }else{
-  extraDrawsUsed=0;
-  currentPlayer=(currentPlayer+1)%4;
- }
+ if(gameOver||animating)return;
+ let r=drawMarbles();
+ animateMove(r.steps,()=>{
+  drawBoard();
+  animating=false;
+  if((r.extra)&&extraDrawsUsed<MAX_EXTRA_DRAWS){
+   extraDrawsUsed++;
+  }else{
+   extraDrawsUsed=0;
+   currentPlayer=(currentPlayer+1)%4;
+  }
+ });
 }
 
 /* ===== TOKEN SELECT ===== */
 canvas.addEventListener("click",e=>{
- if(gameOver)return;
+ if(gameOver||animating)return;
  let r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
  players[currentPlayer].tokens.forEach((t,i)=>{
   if(t.finished)return;
@@ -209,6 +222,5 @@ canvas.addEventListener("click",e=>{
 
 drawBoard();
 </script>
-
 </body>
 </html>
