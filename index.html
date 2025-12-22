@@ -117,10 +117,10 @@ const FINISH={x:2,y:2};
 
 /* ===== PLAYERS ===== */
 const players=[
- {name:"P1",color:"blue",start:{x:2,y:4},tokens:[]},
- {name:"P2",color:"green",start:{x:4,y:2},tokens:[]},
- {name:"P3",color:"purple",start:{x:2,y:0},tokens:[]},
- {name:"P4",color:"orange",start:{x:0,y:2},tokens:[]}
+ {name:"P1",color:"1f4fd8",start:{x:2,y:4},tokens:[]},
+ {name:"P2",color:"1e8f3e",start:{x:4,y:2},tokens:[]},
+ {name:"P3",color:"6a1fb0",start:{x:2,y:0},tokens:[]},
+ {name:"P4",color:"e07a00",start:{x:0,y:2},tokens:[]}
 ];
 
 players.forEach(p=>{
@@ -151,8 +151,8 @@ const STACK=[
 /* ===== ARROWS ===== */
 function drawArrow(x1,y1,x2,y2){
  const h=7,a=Math.atan2(y2-y1,x2-x1);
- ctx.strokeStyle="#4a90e2";
- ctx.fillStyle="#4a90e2";
+ ctx.strokeStyle="#6b7c93";
+ ctx.fillStyle="#6b7c93";
  ctx.lineWidth=3;
  ctx.beginPath();
  ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
@@ -181,7 +181,7 @@ function drawBoard(){
  for(let y=0;y<GRID;y++)for(let x=0;x<GRID;x++){
   ctx.fillStyle=
    board[y][x]===1?"#f4a261":
-   board[y][x]===2?"#90dbf4":"#fff";
+   board[y][x]===2?"#90dbf4":"#f8f8f8";
   ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
   ctx.strokeRect(x*CELL,y*CELL,CELL,CELL);
  }
