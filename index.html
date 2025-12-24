@@ -116,11 +116,12 @@ const innerPath=[
 const FINISH={x:2,y:2};
 
 /* ===== PLAYERS ===== */
-const players=[
- {name:"P1",color:"1f4fd8",start:{x:2,y:4},tokens:[]},
- {name:"P2",color:"1e8f3e",start:{x:4,y:2},tokens:[]},
- {name:"P3",color:"6a1fb0",start:{x:2,y:0},tokens:[]},
- {name:"P4",color:"e07a00",start:{x:0,y:2},tokens:[]}
+
+  const players = [
+  { name:"P1", color:"#1f4fd8", start:{x:2,y:4}, tokens:[] }, // blue
+  { name:"P2", color:"#1e8f3e", start:{x:4,y:2}, tokens:[] }, // green
+  { name:"P3", color:"#6a1fb0", start:{x:2,y:0}, tokens:[] }, // purple
+  { name:"P4", color:"#e07a00", start:{x:0,y:2}, tokens:[] }  // orange
 ];
 
 players.forEach(p=>{
