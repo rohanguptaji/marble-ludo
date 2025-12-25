@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Marble Ludo – Stable</title>
+<title>Marble Ludo – Stable v1.1</title>
 
 <style>
 body{
@@ -65,19 +65,19 @@ button{
 
 <button onclick="playTurn()">Draw Marbles</button>
 
-<div id="p0" class="playerBox" style="bottom:0;left:200px;color:blue">
+<div id="p0" class="playerBox" style="bottom:0;left:200px;color:#1f4fd8">
 P1<br>Blue<div class="marbles"></div>
 </div>
 
-<div id="p1" class="playerBox" style="right:0;top:200px;color:green">
+<div id="p1" class="playerBox" style="right:0;top:200px;color:#1e8f3e">
 P2<br>Green<div class="marbles"></div>
 </div>
 
-<div id="p2" class="playerBox" style="top:0;left:200px;color:purple">
+<div id="p2" class="playerBox" style="top:0;left:200px;color:#6a1fb0">
 P3<br>Purple<div class="marbles"></div>
 </div>
 
-<div id="p3" class="playerBox" style="left:0;top:200px;color:orange">
+<div id="p3" class="playerBox" style="left:0;top:200px;color:#e07a00">
 P4<br>Orange<div class="marbles"></div>
 </div>
 
@@ -86,10 +86,11 @@ P4<br>Orange<div class="marbles"></div>
 
 <script>
 /* ===== CONFIG ===== */
-const GRID=5, CELL=80;
+const GRID = 5;
+const CELL = 80;
 
 /* ===== BOARD ===== */
-const board=[
+const board = [
  [0,0,1,0,0],
  [0,0,0,0,0],
  [1,0,2,0,1],
@@ -98,52 +99,48 @@ const board=[
 ];
 
 /* ===== PATHS ===== */
-// defined clockwise then reversed → anticlockwise
-let outerPath=[
+let outerPath = [
  {x:0,y:0},{x:1,y:0},{x:2,y:0},{x:3,y:0},{x:4,y:0},
  {x:4,y:1},{x:4,y:2},{x:4,y:3},{x:4,y:4},
  {x:3,y:4},{x:2,y:4},{x:1,y:4},{x:0,y:4},
  {x:0,y:3},{x:0,y:2},{x:0,y:1}
-].reverse();
+].reverse(); // anticlockwise
 
-const innerPath=[
+const innerPath = [
  {x:2,y:3},
  {x:3,y:2},
  {x:2,y:1},
  {x:1,y:2}
 ];
 
-const FINISH={x:2,y:2};
-
 /* ===== PLAYERS ===== */
-
-  const players = [
-  { name:"P1", color:"#1f4fd8", start:{x:2,y:4}, tokens:[] }, // blue
-  { name:"P2", color:"#1e8f3e", start:{x:4,y:2}, tokens:[] }, // green
-  { name:"P3", color:"#6a1fb0", start:{x:2,y:0}, tokens:[] }, // purple
-  { name:"P4", color:"#e07a00", start:{x:0,y:2}, tokens:[] }  // orange
+const players = [
+ {name:"P1", color:"#1f4fd8", start:{x:2,y:4}, tokens:[]},
+ {name:"P2", color:"#1e8f3e", start:{x:4,y:2}, tokens:[]},
+ {name:"P3", color:"#6a1fb0", start:{x:2,y:0}, tokens:[]},
+ {name:"P4", color:"#e07a00", start:{x:0,y:2}, tokens:[]}
 ];
 
 players.forEach(p=>{
- const idx=outerPath.findIndex(q=>q.x===p.start.x&&q.y===p.start.y);
+ const idx = outerPath.findIndex(q=>q.x===p.start.x && q.y===p.start.y);
  for(let i=0;i<4;i++){
   p.tokens.push({
    mode:"outer",
    outerIndex:idx,
    innerIndex:0,
    finished:false,
-   isAtHome:true 
+   isAtHome:true   // NEW RULE SUPPORT
   });
  }
 });
 
-let currentPlayer=0;
-let selectedToken=0;
+let currentPlayer = 0;
+let selectedToken = 0;
 
-const canvas=document.getElementById("board");
-const ctx=canvas.getContext("2d");
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
 
-const STACK=[
+const STACK = [
  {x:-12,y:-12},
  {x: 12,y:-12},
  {x:-12,y: 12},
@@ -153,8 +150,8 @@ const STACK=[
 /* ===== ARROWS ===== */
 function drawArrow(x1,y1,x2,y2){
  const h=7,a=Math.atan2(y2-y1,x2-x1);
- ctx.strokeStyle="#6b7c93";
- ctx.fillStyle="#6b7c93";
+ ctx.strokeStyle="#4a90e2";
+ ctx.fillStyle="#4a90e2";
  ctx.lineWidth=3;
  ctx.beginPath();
  ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
@@ -181,7 +178,7 @@ function drawBoard(){
  ctx.clearRect(0,0,400,400);
 
  for(let y=0;y<GRID;y++)for(let x=0;x<GRID;x++){
-  ctx.fillStyle=
+  ctx.fillStyle =
    board[y][x]===1?"#f4a261":
    board[y][x]===2?"#90dbf4":"#f8f8f8";
   ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
@@ -195,22 +192,27 @@ function drawBoard(){
   const groups={};
   p.tokens.forEach(t=>{
    if(t.finished)return;
-   let pos=t.mode==="outer"?outerPath[t.outerIndex]:innerPath[t.innerIndex];
-   const k=`${pos.x},${pos.y}`;
-   if(!groups[k])groups[k]=[];
-   groups[k].push(pos);
+   let pos = p.start;
+   if(!t.isAtHome){
+    pos = t.mode==="outer"?outerPath[t.outerIndex]:innerPath[t.innerIndex];
+   }
+   const key=`${pos.x},${pos.y}`;
+   if(!groups[key])groups[key]=[];
+   groups[key].push(pos);
   });
 
-  Object.values(groups).forEach((grp,i)=>{
-   grp.forEach((pos,j)=>{
+  Object.values(groups).forEach(group=>{
+   group.forEach((pos,i)=>{
     ctx.beginPath();
     ctx.fillStyle=p.color;
     ctx.arc(
-     pos.x*CELL+CELL/2+STACK[j].x,
-     pos.y*CELL+CELL/2+STACK[j].y,
+     pos.x*CELL+CELL/2+STACK[i].x,
+     pos.y*CELL+CELL/2+STACK[i].y,
      10,0,Math.PI*2
     );
     ctx.fill();
+    ctx.strokeStyle="#333";
+    ctx.stroke();
    });
   });
  });
@@ -220,9 +222,7 @@ function drawBoard(){
 }
 
 /* ===== MARBLES ===== */
-function drawMarbles()
-const allSameColor = (whites === 0 || whites === 4);
-{
+function drawMarbles(){
  document.querySelectorAll(".marbles").forEach(m=>m.innerHTML="");
  let box=document.querySelector(`#p${currentPlayer} .marbles`);
  let whites=0;
@@ -233,26 +233,34 @@ const allSameColor = (whites === 0 || whites === 4);
   d.className="marble "+(w?"white":"black");
   box.appendChild(d);
  }
- if(whites===1)return 1;
- if(whites===2)return 2;
- if(whites===3)return 2;
- if(whites===4)return players[currentPlayer].tokens[selectedToken].mode==="outer"?8:9;
- return 4;
+ let token=players[currentPlayer].tokens[selectedToken];
+ let steps=0;
+ if(whites===1)steps=1;
+ else if(whites===2)steps=2;
+ else if(whites===3)steps=2;
+ else if(whites===4)steps=token.mode==="outer"?8:9;
+ else steps=4;
+
+ return { steps, allSame:(whites===0||whites===4) };
 }
 
 /* ===== MOVE ===== */
-function moveSteps(steps){
- let t=players[currentPlayer].tokens[selectedToken];
- while(steps-- && !t.finished){
+function moveSteps(t,steps){
+ if(t.isAtHome)return;
+ while(steps--){
   if(t.mode==="outer"){
    t.outerIndex=(t.outerIndex+1)%outerPath.length;
    let p=outerPath[t.outerIndex];
    if(board[p.y][p.x]===1 && p.x===2 && p.y!==2){
-    t.mode="inner";t.innerIndex=0;
+    t.mode="inner";
+    t.innerIndex=0;
    }
   }else{
    t.innerIndex++;
-   if(t.innerIndex===innerPath.length)t.finished=true;
+   if(t.innerIndex===innerPath.length){
+    t.finished=true;
+    break;
+   }
   }
  }
 }
@@ -260,26 +268,19 @@ function moveSteps(steps){
 /* ===== TURN ===== */
 function playTurn(){
  const result = drawMarbles();
-const steps = result.steps;
-const allSameColor = result.allSameColor;
+ const token = players[currentPlayer].tokens[selectedToken];
 
-const token = players[currentPlayer].tokens[selectedToken];
-
-// RULE: starting a new token
-if (token.isAtHome) {
-  if (allSameColor) {
-    // token comes out
-    token.isAtHome = false;
-    moveSteps(steps);
-  } else {
-    // cannot start token
-    // turn ends with no movement
+ if(token.isAtHome){
+  if(result.allSame){
+   token.isAtHome=false;
+   moveSteps(token,result.steps);
   }
-} else {
-  // token already in play → normal move
-  moveSteps(steps);
-}
+ }else{
+  moveSteps(token,result.steps);
+ }
 
+ currentPlayer=(currentPlayer+1)%4;
+ drawBoard();
 }
 
 drawBoard();
