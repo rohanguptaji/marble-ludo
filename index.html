@@ -124,13 +124,15 @@ const players = [
 players.forEach(p=>{
  const idx = outerPath.findIndex(q=>q.x===p.start.x && q.y===p.start.y);
  for(let i=0;i<4;i++){
-  p.tokens.push({
-   mode:"outer",
-   outerIndex:idx,
-   innerIndex:0,
-   finished:false,
-   isAtHome:true   // NEW RULE SUPPORT
-  });
+ p.tokens.push({
+  mode:"outer",
+  outerIndex:idx,
+  innerIndex:0,
+  finished:false,
+  isAtHome:true,
+  hasCaptured:false   // NEW
+});
+
  }
 });
 
@@ -264,20 +266,62 @@ function moveSteps(t,steps){
   }
  }
 }
+/* ===== CAPTURE ===== */
+function checkCapture(activePlayerIndex, activeToken) {
+
+  // Only outer loop tokens can capture
+  if (activeToken.mode !== "outer" || activeToken.isAtHome) return false;
+
+  const pos = outerPath[activeToken.outerIndex];
+
+  // No capture on safe zones
+  if (board[pos.y][pos.x] === 1) return false;
+
+  for (let p = 0; p < players.length; p++) {
+    if (p === activePlayerIndex) continue;
+
+    players[p].tokens.forEach(t => {
+      if (
+        !t.finished &&
+        !t.isAtHome &&
+        t.mode === "outer"
+      ) {
+        const tPos = outerPath[t.outerIndex];
+        if (tPos.x === pos.x && tPos.y === pos.y) {
+
+          // SEND OPPONENT TOKEN HOME
+          t.isAtHome = true;
+          t.outerIndex = outerPath.findIndex(
+            q => q.x === players[p].start.x && q.y === players[p].start.y
+          );
+          t.innerIndex = 0;
+          t.hasCaptured = false;
+
+          // MARK CAPTURE
+          activeToken.hasCaptured = true;
+        }
+      }
+    });
+  }
+
+  return true;
+}
 
 /* ===== TURN ===== */
 function playTurn(){
  const result = drawMarbles();
  const token = players[currentPlayer].tokens[selectedToken];
 
- if(token.isAtHome){
-  if(result.allSame){
-   token.isAtHome=false;
-   moveSteps(token,result.steps);
+ if (token.isAtHome) {
+  if (result.allSame) {
+    token.isAtHome = false;
+    moveSteps(token, result.steps);
+    checkCapture(currentPlayer, token);
   }
- }else{
-  moveSteps(token,result.steps);
- }
+} else {
+  moveSteps(token, result.steps);
+  checkCapture(currentPlayer, token);
+}
 
  currentPlayer=(currentPlayer+1)%4;
  drawBoard();
