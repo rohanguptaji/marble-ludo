@@ -174,6 +174,39 @@ function drawPathArrows(path){
   );
  }
 }
+/* ===== TOKEN SELECTION ===== */
+canvas.addEventListener("click", function (e) {
+
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  const player = players[currentPlayer];
+
+  player.tokens.forEach((t, index) => {
+    if (t.finished) return;
+
+    // Determine token position
+    let pos = player.start;
+    if (!t.isAtHome) {
+      pos = t.mode === "outer"
+        ? outerPath[t.outerIndex]
+        : innerPath[t.innerIndex];
+    }
+
+    const cx = pos.x * CELL + CELL / 2;
+    const cy = pos.y * CELL + CELL / 2;
+
+    const dx = mx - cx;
+    const dy = my - cy;
+
+    // Click radius detection
+    if (Math.sqrt(dx * dx + dy * dy) <= 14) {
+      selectedToken = index;
+      drawBoard();
+    }
+  });
+});
 
 /* ===== DRAW ===== */
 function drawBoard(){
@@ -205,16 +238,27 @@ function drawBoard(){
 
   Object.values(groups).forEach(group=>{
    group.forEach((pos,i)=>{
-    ctx.beginPath();
-    ctx.fillStyle=p.color;
-    ctx.arc(
-     pos.x*CELL+CELL/2+STACK[i].x,
-     pos.y*CELL+CELL/2+STACK[i].y,
-     10,0,Math.PI*2
-    );
-    ctx.fill();
-    ctx.strokeStyle="#333";
-    ctx.stroke();
+   ctx.beginPath();
+ctx.fillStyle = p.color;
+ctx.arc(
+  pos.x*CELL + CELL/2 + STACK[i].x,
+  pos.y*CELL + CELL/2 + STACK[i].y,
+  (i === selectedToken && p === players[currentPlayer]) ? 12 : 10,
+  0,
+  Math.PI*2
+);
+ctx.fill();
+
+// Highlight selected token
+if (p === players[currentPlayer] && i === selectedToken) {
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 3;
+} else {
+  ctx.strokeStyle = "#333";
+  ctx.lineWidth = 1;
+}
+ctx.stroke();
+
    });
   });
  });
