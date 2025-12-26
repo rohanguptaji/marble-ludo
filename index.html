@@ -138,7 +138,8 @@ players.forEach(p=>{
 
 let currentPlayer = 0;
 let selectedToken = 0;
-
+let grantExtraTurn = false;
+let gameOver = false;  
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 
@@ -311,6 +312,15 @@ if (
 }
 /* ===== CAPTURE ===== */
 function checkCapture(activePlayerIndex, activeToken) {
+function checkWin(playerIndex) {
+  const player = players[playerIndex];
+  const finishedCount = player.tokens.filter(t => t.finished).length;
+
+  if (finishedCount === 4) {
+    gameOver = true;
+    alert(player.name + " WINS THE GAME!");
+  }
+}
 
   // Only outer loop tokens can capture
   if (activeToken.mode !== "outer" || activeToken.isAtHome) return false;
@@ -352,6 +362,7 @@ function checkCapture(activePlayerIndex, activeToken) {
 
 /* ===== TURN ===== */
 function playTurn(){
+  if (gameOver) return;
  const result = drawMarbles();
  const token = players[currentPlayer].tokens[selectedToken];
 
@@ -371,6 +382,17 @@ function playTurn(){
 }
 
 drawBoard();
+  drawBoard();
+
+// CHECK WIN
+checkWin(currentPlayer);
+if (gameOver) return;
+
+// Change turn ONLY if no extra turn earned
+if (!grantExtraTurn) {
+  currentPlayer = (currentPlayer + 1) % 4;
+}
+
 </script>
 </body>
 </html>
