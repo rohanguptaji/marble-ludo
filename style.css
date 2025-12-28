@@ -1,33 +1,113 @@
+/* Enhanced styles for Marble Ludo game */
+
 body{
   font-family: Arial, sans-serif;
-  background:#f2f2f2;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display:flex;
   justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  padding:20px;
+  margin:0;
+}
+
+#game{ 
+  width:700px;
+  max-width:95%;
+  background:#fff;
+  border-radius:16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   padding:20px;
 }
-#game{ width:640px; max-width:95%; }
-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-.controls{ display:flex; gap:12px; align-items:center; }
-button{ padding:8px 12px; font-size:14px; cursor:pointer; }
-.players{ display:flex; gap:8px; justify-content:space-between; margin-bottom:12px; }
-.playerBox{
-  width:140px; padding:8px; background:#fff; border:1px solid #ddd; text-align:center;
-}
-.playerBox.active{ border-color:#333; font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
-.marbles{ display:flex; gap:6px; justify-content:center; margin-top:6px; min-height:22px; }
-.marble{ width:18px; height:18px; border-radius:50%; border:1px solid #333; }
-.white{ background:#f5f5f5; }
-.black{ background:#222; }
-canvas{ display:block; margin:0 auto; background:#fff; border:2px solid #000; }
-.log{ margin-top:10px; min-height:30px; background:#fff; padding:6px; border:1px solid #eee; }
 
+header{ 
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+  border-bottom:2px solid #e0e0e0;
+  padding-bottom:12px;
+}
+
+h1{
+  margin:0;
+  font-size:24px;
+  color:#333;
+  font-weight:700;
+}
+
+.controls{ 
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+button{ 
+  padding:10px 20px;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  border:none;
+  border-radius:8px;
+  background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(102,126,234,0.4);
+  transition:all 0.3s;
+}
+
+button:hover{
+  transform: translateY(-2px);
+  box-shadow:0 6px 16px rgba(102,126,234,0.6);
+}
+
+button:active{
+  transform: translateY(0);
+}
+
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+  transform: none;
+}
+
+canvas{ 
+  display:block;
+  margin:20px auto;
+  background:#fff;
+  border:3px solid #333;
+  border-radius:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+.log{ 
+  margin-top:16px;
+  padding:12px;
+  background:#f8f9fa;
+  border-radius:8px;
+  min-height:80px;
+  max-height:120px;
+  overflow-y:auto;
+  border:1px solid #dee2e6;
+}
+
+.log p{
+  margin:4px 0;
+  font-size:13px;
+  color:#495057;
+}
+
+/* Marble container */
 .marble-box {
   display: grid;
-  grid-template-columns: repeat(2, 555px);
-    grid-template-rows: repeat(2, 55px);
+  grid-template-columns: repeat(2, 55px);
+  grid-template-rows: repeat(2, 55px);
+  gap: 8px;
   margin: 10px 0;
+  justify-content:center;
 }
 
+/* 3D Othello-style marbles */
 .marble {
   width: 50px;
   height: 50px;
@@ -44,22 +124,62 @@ canvas{ display:block; margin:0 auto; background:#fff; border:2px solid #000; }
 @keyframes spin {
   0% {
     transform: rotateY(0deg) scale(0.5);
-    opacity: 0;
-  }
-  50% {
-    transform: rotateY(180deg) scale(1.1);
   }
   100% {
     transform: rotateY(360deg) scale(1);
-    opacity: 1;
   }
 }
 
 .marble.white {
-  background: radial-gradient(circle at 35% 35%, #ffffff, #e8e8e8 40%, #c0c0c0);
-  border: 2px solid #999;
+  background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
 }
 
 .marble.black {
-  background: radial-gradient(circle at 35% 35%, #4a4a4a, #2a2a2a 40%, #000000);
-  border: 2px solid #1a1a1a;}
+  background: radial-gradient(circle at 30% 30%, #4a4a4a, #000000);
+}
+
+/* Player panels */
+.players{ 
+  display:flex;
+  gap:8px;
+  justify-content:space-between;
+  margin:16px 0;
+}
+
+.playerBox{
+  flex:1;
+  padding:10px;
+  background:#f8f9fa;
+  border:2px solid #dee2e6;
+  border-radius:8px;
+  text-align:center;
+  transition:all 0.3s;
+}
+
+.playerBox.active{
+  border-color:#667eea;
+  background:linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+  box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+  transform: scale(1.05);
+}
+
+.playerBox strong{
+  display:block;
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.playerBox .marbles{
+  font-size:12px;
+  color:#666;
+  font-weight:600;
+}
+
+#rollInfo{
+  font-size:14px;
+  color:#495057;
+  margin:8px 0;
+  font-weight:600;
+  text-align:center;
+}
