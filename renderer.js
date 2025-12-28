@@ -291,41 +291,54 @@
     });
   }
   
-  function drawDirectionArrows(){
-    ctx.save();
-    ctx.font = '16px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    const outerArrows = [
-      {x:0.5, y:0.5, arrow:'↓'},
-      {x:3.5, y:0.5, arrow:'↓'},
-      {x:4.5, y:1.5, arrow:'↓'},
-      {x:4.5, y:3.5, arrow:'←'},
-      {x:3.5, y:4.5, arrow:'←'},
-      {x:0.5, y:4.5, arrow:'↑'},
-      {x:0.5, y:3.5, arrow:'↑'},
-      {x:0.5, y:1.5, arrow:'→'}
-    ];
-    
-    ctx.fillStyle = '#666';
-    outerArrows.forEach(a => {
-      ctx.fillText(a.arrow, a.x*CELL, a.y*CELL);
-    });
-    
-    const innerArrows = [
-      {x:2.3, y:2.5, arrow:'→'},
-      {x:2.5, y:1.7, arrow:'↑'},
-      {x:1.7, y:2.5, arrow:'←'}
-    ];
-    
-    ctx.fillStyle = '#1f4fd8';
-    innerArrows.forEach(a => {
-      ctx.fillText(a.arrow, a.x*CELL, a.y*CELL);
-    });
-    
-    ctx.restore();
+  function drawTurnArrow(ctx, x, y, dir, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+
+  const c = CELL;
+  const cx = x * c;
+  const cy = y * c;
+
+  if (dir === "up-right") {
+    ctx.moveTo(cx + c * 0.2, cy + c * 0.7);
+    ctx.lineTo(cx + c * 0.2, cy + c * 0.3);
+    ctx.lineTo(cx + c * 0.6, cy + c * 0.3);
+    ctx.lineTo(cx + c * 0.55, cy + c * 0.25);
+    ctx.moveTo(cx + c * 0.6, cy + c * 0.3);
+    ctx.lineTo(cx + c * 0.55, cy + c * 0.35);
   }
+
+  if (dir === "right-down") {
+    ctx.moveTo(cx + c * 0.3, cy + c * 0.2);
+    ctx.lineTo(cx + c * 0.7, cy + c * 0.2);
+    ctx.lineTo(cx + c * 0.7, cy + c * 0.6);
+    ctx.lineTo(cx + c * 0.65, cy + c * 0.55);
+    ctx.moveTo(cx + c * 0.7, cy + c * 0.6);
+    ctx.lineTo(cx + c * 0.75, cy + c * 0.55);
+  }
+
+  if (dir === "down-left") {
+    ctx.moveTo(cx + c * 0.8, cy + c * 0.3);
+    ctx.lineTo(cx + c * 0.8, cy + c * 0.7);
+    ctx.lineTo(cx + c * 0.4, cy + c * 0.7);
+    ctx.lineTo(cx + c * 0.45, cy + c * 0.75);
+    ctx.moveTo(cx + c * 0.4, cy + c * 0.7);
+    ctx.lineTo(cx + c * 0.45, cy + c * 0.65);
+  }
+
+  if (dir === "left-up") {
+    ctx.moveTo(cx + c * 0.7, cy + c * 0.8);
+    ctx.lineTo(cx + c * 0.3, cy + c * 0.8);
+    ctx.lineTo(cx + c * 0.3, cy + c * 0.4);
+    ctx.lineTo(cx + c * 0.25, cy + c * 0.45);
+    ctx.moveTo(cx + c * 0.3, cy + c * 0.4);
+    ctx.lineTo(cx + c * 0.35, cy + c * 0.45);
+  }
+
+  ctx.stroke();
+}
+
   
   init();
 })();
