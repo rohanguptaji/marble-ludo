@@ -20,3 +20,26 @@ button{ padding:8px 12px; font-size:14px; cursor:pointer; }
 .black{ background:#222; }
 canvas{ display:block; margin:0 auto; background:#fff; border:2px solid #000; }
 .log{ margin-top:10px; min-height:30px; background:#fff; padding:6px; border:1px solid #eee; }
+
+.marble-box {
+  display: grid;
+  grid-template-columns: repeat(2, 26px);
+  grid-template-rows: repeat(2, 26px);
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.marble {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #333;
+}
+
+.marble.white {
+  background: white;
+}
+
+.marble.black {
+  background: black;
+}
