@@ -59,6 +59,7 @@
       
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left;
+          });
       const my = e.clientY - rect.top;
       const state = Game.getState();
       
