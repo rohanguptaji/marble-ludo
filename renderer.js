@@ -35,21 +35,25 @@
       
       waitingForMove = true;
       
-      // Check if player has any valid moves
-      const canMove = checkIfCanMove(state, roll);
-      
-      if(!canMove){
-        // No valid moves - skip turn after showing marbles briefly
-        log(`Player ${state.currentPlayer + 1} has no valid moves`);
-        setTimeout(() => {
-          endTurn(false);
-        }, 800);
-      } else {
-        // Auto-select and move if only one token can move
-        setTimeout(() => autoSelectAndMove(roll), 300);
-      }
-    });
-    
+
+
+            // CRITICAL FIX: If NOT all same color, advance turn immediately
+            if(!roll.allSame){
+                      log(`Player ${state.currentPlayer + 1} did not get all same color - turn passes`);
+                      setTimeout(() => {
+                                  endTurn(false);
+                                }, 800);
+                      return; // Exit early - don't check for moves
+                    }
+      // Player got all same color - check if they can move any tokens
+            const canMove = checkIfCanMove(state, roll);
+            if(!canMove){
+                      log(`Player ${state.currentPlayer + 1} has no valid moves`);
+                      setTimeout(() => { endTurn(false); }, 800);
+                    } else {
+                      // Auto-select and move if only one token can move
+                      setTimeout(() => autoSelectAndMove(roll), 300);
+                    }
     canvas.addEventListener('click', (e) => {
       if(animating || !waitingForMove) return;
       
