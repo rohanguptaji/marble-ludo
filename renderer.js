@@ -77,18 +77,39 @@
 
   function showMarbles(roll){
     clearMarbles();
-    const box = $(`#p${Game.getState().currentPlayer} .marbles`);
-    for(let i=0;i<4;i++){
-      const d = document.createElement('div');
-      d.className = 'marble ' + ((i < roll.whites) ? 'white' : 'black');
-      box.appendChild(d);
-    }
+        clearMarbles();
+        const box = $('#marbleBox');
+        for(let i=0;i<4;i++){
+            const d = document.createElement('div');
+            d.className = 'marble ' + ((i < roll.whites) ? 'white' : 'black');
+            box.appendChild(d);
+        }
+        
+        // Check if only one token can move and auto-select it
+        const state = Game.getState();
+        const player = state.players[state.currentPlayer];
+        const movableTokens = player.tokens.filter((t, idx) => !t.finished && (t.isAtHome ? roll.allSame : true));
+        
+        if(movableTokens.length === 1){
+            // Auto-select the only movable token
+            selectedToken = player.tokens.findIndex(t => t === movableTokens[0]);
+            // Auto-apply move
+            setTimeout(() => {
+                const res = Game.applyMove(selectedToken);
+                if(!res.error){
+                    if(res.moved) log(`Auto-moved token ${selectedToken+1}`);
+                    if(res.won) log(`Player ${state.currentPlayer+1} WINS!`);
+                    Game.nextPlayerIfNeeded(res.grantExtraTurn);
+                    clearMarbles();
+                    drawBoard();
+                }
+            }, 300); // Small delay to see the marble draw
+        }    }
   }
 
   function clearMarbles(){
-    $all('.marbles').forEach(m => m.innerHTML = '');
-    $('#rollInfo').textContent = '';
-  }
+        $('#marbleBox').innerHTML = '';
+        $('#rollInfo').textContent = '';  }
 
   function log(msg){
     const l = $('#log');
