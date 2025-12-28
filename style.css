@@ -1,0 +1,22 @@
+body{
+  font-family: Arial, sans-serif;
+  background:#f2f2f2;
+  display:flex;
+  justify-content:center;
+  padding:20px;
+}
+#game{ width:640px; max-width:95%; }
+header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.controls{ display:flex; gap:12px; align-items:center; }
+button{ padding:8px 12px; font-size:14px; cursor:pointer; }
+.players{ display:flex; gap:8px; justify-content:space-between; margin-bottom:12px; }
+.playerBox{
+  width:140px; padding:8px; background:#fff; border:1px solid #ddd; text-align:center;
+}
+.playerBox.active{ border-color:#333; font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+.marbles{ display:flex; gap:6px; justify-content:center; margin-top:6px; min-height:22px; }
+.marble{ width:18px; height:18px; border-radius:50%; border:1px solid #333; }
+.white{ background:#f5f5f5; }
+.black{ background:#222; }
+canvas{ display:block; margin:0 auto; background:#fff; border:2px solid #000; }
+.log{ margin-top:10px; min-height:30px; background:#fff; padding:6px; border:1px solid #eee; }
