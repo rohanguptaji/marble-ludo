@@ -1,4 +1,4 @@
-// renderer.js — Enhanced UI with smooth animations and better visuals
+// renderer.js — Enhanced UI with automatic turn advancement
 
 (function(){
   const canvas = document.getElementById('board');
@@ -8,6 +8,7 @@
   
   let selectedToken = 0;
   let animating = false;
+  let waitingForMove = false; // New: tracks if we're waiting for a move after drawing
   
   function $(s){ return document.querySelector(s); }
   function $all(s){ return Array.from(document.querySelectorAll(s)); }
@@ -21,10 +22,10 @@
   
   function bindUI(){
     $('#drawBtn').addEventListener('click', () => {
-      if(animating) return;
+      if(animating || waitingForMove) return;
       
       const roll = Game.drawMarbles();
-      if(!roll) return; // Blocked during animation
+      if(!roll) return;
       
       showMarbles(roll);
       $('#rollInfo').textContent = `Whites: ${roll.whites} — Steps: ${roll.steps}`;
@@ -32,19 +33,30 @@
       const state = Game.getState();
       log(`Player ${state.currentPlayer + 1} rolled: ${roll.steps} steps`);
       
-      // Auto-select and move if only one token can move
-      setTimeout(() => autoSelectAndMove(roll), 300);
+      waitingForMove = true;
+      
+      // Check if player has any valid moves
+      const canMove = checkIfCanMove(state, roll);
+      
+      if(!canMove){
+        // No valid moves - skip turn after showing marbles briefly
+        log(`Player ${state.currentPlayer + 1} has no valid moves`);
+        setTimeout(() => {
+          endTurn(false);
+        }, 800);
+      } else {
+        // Auto-select and move if only one token can move
+        setTimeout(() => autoSelectAndMove(roll), 300);
+      }
     });
     
     canvas.addEventListener('click', (e) => {
-      if(animating) return;
+      if(animating || !waitingForMove) return;
       
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
       const state = Game.getState();
-      
-      if(!state.lastRoll) return; // Must roll first
       
       const player = state.players[state.currentPlayer];
       const clicked = findClickedToken(mx, my, player);
@@ -54,6 +66,20 @@
         handleTokenMove();
       }
     });
+  }
+  
+  function checkIfCanMove(state, roll){
+    const player = state.players[state.currentPlayer];
+    // Check if any token can make a valid move
+    for(let i = 0; i < player.tokens.length; i++){
+      const t = player.tokens[i];
+      if(t.finished) continue;
+      // Token at home can only move if allSame
+      if(t.isAtHome && !roll.allSame) continue;
+      // This token can move
+      return true;
+    }
+    return false;
   }
   
   function findClickedToken(mx, my, player){
@@ -117,21 +143,29 @@
       if(res.won) {
         log(`🎉 Player ${state.currentPlayer+1} WINS!`);
         $('#drawBtn').disabled = true;
+        waitingForMove = false;
+        animating = false;
+        Game.setMoving(false);
+        return;
       }
       
       animateMove(() => {
-        Game.nextPlayerIfNeeded(res.grantExtraTurn);
-        clearMarbles();
-        drawBoard();
-        updateTurnIndicator();
-        animating = false;
-        Game.setMoving(false);
+        endTurn(res.grantExtraTurn);
       });
     }
   }
   
+  function endTurn(grantExtraTurn){
+    Game.nextPlayerIfNeeded(grantExtraTurn);
+    clearMarbles();
+    drawBoard();
+    updateTurnIndicator();
+    animating = false;
+    Game.setMoving(false);
+    waitingForMove = false;
+  }
+  
   function animateMove(callback){
-    // Simple animation - just redraw with delay
     setTimeout(() => {
       drawBoard();
       callback();
@@ -150,6 +184,7 @@
   
   function clearMarbles(){
     $('#marbleBox').innerHTML = '';
+    $('#rollInfo').textContent = '';
   }
   
   function log(msg){
@@ -158,7 +193,6 @@
     p.textContent = msg;
     l.appendChild(p);
     l.scrollTop = l.scrollHeight;
-    // Keep only last 5 messages
     while(l.children.length > 5) l.removeChild(l.firstChild);
   }
   
@@ -175,7 +209,6 @@
     const state = Game.getState();
     ctx.clearRect(0,0,canvas.width,canvas.height);
     
-    // Draw board grid with safe zones highlighted
     const b = [
       [0,0,1,0,0],
       [0,0,0,0,0],
@@ -187,20 +220,17 @@
     for(let y=0;y<5;y++){
       for(let x=0;x<5;x++){
         if(b[y][x]===1){
-          // Safe zones - orange with pattern
           ctx.fillStyle = '#f4a261';
           ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
           ctx.strokeStyle = '#e07a00';
           ctx.lineWidth = 3;
           ctx.strokeRect(x*CELL+2,y*CELL+2,CELL-4,CELL-4);
         } else if(b[y][x]===2){
-          // Center finish - special
           ctx.fillStyle = '#90dbf4';
           ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
           ctx.strokeStyle = '#1f4fd8';
           ctx.lineWidth = 4;
           ctx.strokeRect(x*CELL+3,y*CELL+3,CELL-6,CELL-6);
-          // Draw star
           ctx.fillStyle = '#ffdd00';
           ctx.font = '40px Arial';
           ctx.textAlign = 'center';
@@ -216,10 +246,8 @@
       }
     }
     
-    // Draw direction arrows
     drawDirectionArrows();
     
-    // Draw tokens
     state.players.forEach((p, pi)=>{
       const groups = {};
       p.tokens.forEach((t, idx)=>{
@@ -245,12 +273,10 @@
           ctx.arc(cx, cy, radius, 0, Math.PI*2);
           ctx.fill();
           
-          // Add border
           ctx.lineWidth = highlighted ? 3 : 2;
           ctx.strokeStyle = highlighted ? '#fff' : '#333';
           ctx.stroke();
           
-          // Add shine effect
           ctx.beginPath();
           ctx.arc(cx-3, cy-3, radius/3, 0, Math.PI*2);
           ctx.fillStyle = 'rgba(255,255,255,0.4)';
@@ -266,7 +292,6 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Outer loop arrows (anticlockwise)
     const outerArrows = [
       {x:0.5, y:0.5, arrow:'↓'},
       {x:3.5, y:0.5, arrow:'↓'},
@@ -283,7 +308,6 @@
       ctx.fillText(a.arrow, a.x*CELL, a.y*CELL);
     });
     
-    // Inner loop arrows (clockwise)
     const innerArrows = [
       {x:2.3, y:2.5, arrow:'→'},
       {x:2.5, y:1.7, arrow:'↑'},
