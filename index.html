@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Marble Ludo – Stable v1.9</title>
+<title>Marble Ludo – Stable v2.0</title>
 
 <style>
 body{
@@ -62,7 +62,13 @@ button{
    height:24px;
   border-radius:50%;
   border:1px solid #333;
+    animation:roll 0.6s ease-in-out;
 }
+  @keyframes roll{
+      0%{transform:rotate(0deg) scale(0.8); opacity:0.5;}
+      50%{transform:rotate(180deg) scale(1.1);}
+      100%{transform:rotate(360deg) scale(1); opacity:1;}
+    }
 .white{background:#f5f5f5;}
 .black{background:#222;}
 </style>
