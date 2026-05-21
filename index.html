@@ -1,1 +1,128 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marble Ludo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>Marble Ludo</h1>
+      <div class="topbar-actions">
+        <label for="playerCount">Players:</label>
+        <select id="playerCount">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+        </select>
+        <button id="newGameBtn">New Game</button>
+      </div>
+    </header>
+
+    <main class="game-layout">
+      <section class="sidebar">
+        <div class="panel">
+          <h2>Game Status</h2>
+          <div id="currentPlayerIndicator" class="current-player-indicator">
+            Current Player: -
+          </div>
+          <div id="drawValueDisplay" class="draw-value">Draw: -</div>
+          <div id="statusMessage" class="status-message">
+            Click "New Game" to start.
+          </div>
+        </div>
+
+        <div class="panel controls">
+          <button id="drawBtn" class="primary-btn">Draw Marble</button>
+          <button id="restartBtn">Restart</button>
+        </div>
+
+        <div class="panel">
+          <h2>Players</h2>
+          <div id="playersLegend" class="players-legend"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Rules Summary</h2>
+          <ul class="rules-list">
+            <li>Draw 6 to bring a marble out of home.</li>
+            <li>Click a highlighted marble to move it.</li>
+            <li>Landing on an opponent sends them home.</li>
+            <li>Safe cells cannot be captured.</li>
+            <li>Exact roll required to reach final finish.</li>
+            <li>Rolling a 6 grants an extra turn.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="board-section">
+        <div id="board" class="board"></div>
+      </section>
+    </main>
+
+    <section class="readme">
+      <h2>README</h2>
+      <p>
+        This is a Marble Ludo-style browser game built with HTML, CSS, and vanilla JavaScript.
+        It supports 2–4 players, turn-based play, home/start zones, safe cells, finish lanes,
+        capture mechanics, exact-finish movement, and win detection.
+      </p>
+
+      <h3>Core Game Logic</h3>
+      <p>
+        Each marble stores a logical <strong>step position</strong> rather than relying on fragile
+        visual movement. A marble can be:
+      </p>
+      <ul>
+        <li><strong>Home</strong>: not yet entered the track</li>
+        <li><strong>0 to mainTrackLength - 1</strong>: on the main track</li>
+        <li><strong>mainTrackLength to mainTrackLength + finishLength - 1</strong>: in the player's finish lane</li>
+        <li><strong>Completed</strong>: reached the final finish cell</li>
+      </ul>
+      <p>
+        When a draw happens, the game calculates valid moves by checking each marble’s current state and
+        simulating the exact destination. Only marbles with legal moves become selectable. This prevents
+        the earlier bug where marbles could be drawn but not moved correctly after valid draws.
+      </p>
+
+      <h3>GitHub Upload Instructions</h3>
+      <ol>
+        <li>Create a new repository on GitHub.</li>
+        <li>Save these three files into your project folder:
+          <ul>
+            <li><code>index.html</code></li>
+            <li><code>style.css</code></li>
+            <li><code>script.js</code></li>
+          </ul>
+        </li>
+        <li>Open a terminal in the folder and run:</li>
+      </ol>
+      <pre><code>git init
+git add .
+git commit -m "Initial Marble Ludo game"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+git push -u origin main</code></pre>
+
+      <h3>GitHub Pages Deployment</h3>
+      <ol>
+        <li>Open your GitHub repository.</li>
+        <li>Go to <strong>Settings</strong> → <strong>Pages</strong>.</li>
+        <li>Under <strong>Build and deployment</strong>, set:
+          <ul>
+            <li><strong>Source</strong>: Deploy from a branch</li>
+            <li><strong>Branch</strong>: <code>main</code> and <code>/root</code></li>
+          </ul>
+        </li>
+        <li>Save the settings.</li>
+        <li>Wait a minute for deployment, then open the generated GitHub Pages URL.</li>
+      </ol>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
